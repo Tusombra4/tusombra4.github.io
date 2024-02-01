@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>El ahorcado</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #e6e6fa; /* Fondo lila */
+        }
+
+        table {
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+
+        input {
+            width: 30px;
+            height: 30px;
+            text-transform: uppercase;
+            text-align: center;
+        }
+
+        #verificationBtn {
+            padding: 10px;
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+
+        #hangmanCanvas {
+            display: none;
+            margin-top: 20px;
+        }
+
+        #message {
+            font-size: 18px;
+            margin-top: 20px;
+        }
+
+        .congratulations {
+            display: none;
+            font-size: 24px;
+            color: #008000; /* Color verde */
+        }
+
+        #welcomeMessage {
+            font-size: 30px; /* Puedes ajustar este valor según tu preferencia */
+        }
+    </style>
+</head>
+<div id="welcomeMessage">¡Bienvenido! Intenta adivinar la palabra antes de que se forme el stickman.</div>
+<p id="hint" style="color: blue; margin-top: 20px;">Pista: Es un experimento</p>
+<body>
+
+<table border="1">
+    <tr>
+        <td><input type="text" maxlength="1" id="cell_0_0"></td>
+        <td><input type="text" maxlength="1" id="cell_0_1"></td>
+        <td><input type="text" maxlength="1" id="cell_0_2"></td>
+        <td><input type="text" maxlength="1" id="cell_0_3"></td>
+        <td><input type="text" maxlength="1" id="cell_0_4"></td>
+        <td><input type="text" maxlength="1" id="cell_0_5"></td>
+        <!-- Add more cells as needed -->
+    </tr>
+    <!-- Add more rows as needed -->
+</table>
+
+<button id="verificationBtn">Verificar Respuestas</button>
+<button id="restartBtn">Reiniciar Juego</button>
+
+<canvas id="hangmanCanvas" width="200" height="200"></canvas>
+
+<div id="message"></div>
+<div id="congratulations" class="congratulations">¡Felicidades!¡Has conseguido una pista de la contraseña! es el 1 🎁</div>
+
+<script>
+    const answers = {
+        0: {0: 'S', 1: 'T', 2: 'I', 3: 'T', 4: 'C', 5: 'H'},
+        // Add more rows as needed
+    };
+
+    const hangmanCanvas = document.getElementById('hangmanCanvas');
+    const hangmanContext = hangmanCanvas.getContext('2d');
+    const messageElement = document.getElementById('message');
+    const congratulationsElement = document.getElementById('congratulations');
+    let incorrectCount = 0;
+    const maxIncorrectAttempts = 6;
+
+    document.getElementById('verificationBtn').addEventListener('click', function () {
+        let incorrectAttempt = false;
+
+        for (let row in answers) {
+            for (let col in answers[row]) {
+                const input = document.getElementById(`cell_${row}_${col}`);
+                const inputValue = input.value.toUpperCase();
+                if (inputValue === answers[row][col]) {
+                    input.style.color = 'green';
+                } else {
+                    input.style.color = 'red';
+                    incorrectAttempt = true;
+                }
+            }
+        }
+
+        if (incorrectAttempt) {
+            incorrectCount++;
+            drawHangman(incorrectCount);
+
+            if (incorrectCount === maxIncorrectAttempts) {
+                gameOver("Perdiste. Vuelve a intentarlo.");
+            }
+        } else {
+            // Check if all inputs are correct
+            if (checkAllCorrect()) {
+                congratulationsElement.style.display = 'block';
+                document.body.style.backgroundColor = '#e6e6fa'; // Cambia el fondo a lila
+                document.getElementById('verificationBtn').disabled = true;
+            }
+        }
+    });
+
+    function drawHangman(incorrectCount) {
+        hangmanCanvas.style.display = 'block';
+
+        // Draw hangman based on the number of incorrect guesses
+        hangmanContext.clearRect(0, 0, hangmanCanvas.width, hangmanCanvas.height);
+
+        switch (incorrectCount) {
+            case 1:
+                // Draw head
+                hangmanContext.beginPath();
+                hangmanContext.arc(100, 40, 20, 0, 2 * Math.PI);
+                hangmanContext.stroke();
+                break;
+            case 2:
+                // Draw body
+                hangmanContext.moveTo(100, 60);
+                hangmanContext.lineTo(100, 120);
+                hangmanContext.stroke();
+                break;
+            // Add more cases as needed
+            case 3:
+                // Draw left arm
+                hangmanContext.moveTo(80, 80);
+                hangmanContext.lineTo(100, 90);
+                hangmanContext.stroke();
+                break;
+            case 4:
+                // Draw right arm
+                hangmanContext.moveTo(120, 80);
+                hangmanContext.lineTo(100, 90);
+                hangmanContext.stroke();
+                break;
+            case 5:
+                // Draw left leg
+                hangmanContext.moveTo(90, 140);
+                hangmanContext.lineTo(100, 120);
+                hangmanContext.stroke();
+                break;
+            case 6:
+                // Draw right leg
+                hangmanContext.moveTo(110, 140);
+                hangmanContext.lineTo(100, 120);
+                hangmanContext.stroke();
+                break;
+        }
+    }
+
+    function gameOver(message) {
+        messageElement.innerText = message;
+        document.getElementById('verificationBtn').disabled = true;
+    }
+
+    function checkAllCorrect() {
+        for (let row in answers) {
+            for (let col in answers[row]) {
+                const input = document.getElementById(`cell_${row}_${col}`);
+                const inputValue = input.value.toUpperCase();
+                if (inputValue !== answers[row][col]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+        document.getElementById('restartBtn').addEventListener('click', function () {
+        resetGame();
+    });
+
+    function resetGame() {
+        // Restablecer estilos y valores a los valores iniciales
+        for (let row in answers) {
+            for (let col in answers[row]) {
+                const input = document.getElementById(`cell_${row}_${col}`);
+                input.value = '';
+                input.style.color = '';
+            }
+        }
+
+        hangmanCanvas.style.display = 'none';
+        hangmanContext.clearRect(0, 0, hangmanCanvas.width, hangmanCanvas.height);
+        messageElement.innerText = '';
+        congratulationsElement.style.display = 'none';
+        document.getElementById('verificationBtn').disabled = false;
+        document.body.style.backgroundColor = '#e6e6fa'; // Restaurar color de fondo
+
+        // Reiniciar el contador de intentos incorrectos
+        incorrectCount = 0;
+    }
+</script>
+
+</body>
+
+</html>
